@@ -68,8 +68,8 @@ class BARCODE:
         df = pd.read_csv(filepath_or_buffer=barcode_tsv,
                         sep='\t',
                         header=0)
-        df['Tag'] = df['Plate'].astype(str) + '-' + df['Well'].astype(str)
-        sample_dict = df.to_dict('list')
+        df['Tag'] = df['Plate'].astype(dtype=str) + '-' + df['Well'].astype(dtype=str)
+        sample_dict = df.to_dict(orient='list')
         return sample_dict
         
 
@@ -207,7 +207,7 @@ class BARCODE:
         valid_reads = s['valid reads']
         valid_reads_percent = round(valid_reads*100/s['total_reads'], 2)
         barcode_summary['Valid reads:'] = f'{format_int(valid_reads)} ({valid_reads_percent}%)'
-        barcode_summary['Median read counts for barcode:'] = int(statistics.median([i[1] for i in reads_counter]))
+        barcode_summary['Median read counts for barcode:'] = format_int(int(statistics.median([i[1] for i in reads_counter])))
         barcode_q30_reads = s['barcode Q30']
         barcode_q30_reads_percent = round(s['barcode Q30']*100/s['total_reads'], 2)
         barcode_summary['Barcodes Q30:'] = f'{format_int(barcode_q30_reads)} ({barcode_q30_reads_percent}%)'
