@@ -1,0 +1,73 @@
+<div class="abc" style="float: left; margin-left: 15%; margin-right:15%; width: 70%" >
+    <h2>Demultiplexing    <i class="fa fa-question-circle" onClick="toggle1(this)" style="cursor:pointer;"></i></h2>
+    <div class="box">
+      <div class="description" style="display: none;">
+        <p><b>Total reads:</b> total reads from FASTQ files.</p>
+        <p><b>Valid reads:</b> reads passed filtering(mininum base quality>=10, mismatch base pair<=1).</p>
+        <p><b>Median read counts for barcode:</b> Median read counts for all barcodes.</p>
+        <p><b>Barcodes Q30:</b> percent of barcode base pairs with quality scores over Q30, Q30 barcode counts / all read counts.</p>
+        <p><b>UMIs Q30:</b> percent of UMI base pairs with quality scores over Q30, Q30 UMI counts / all read counts.</p>
+      </div>
+      <table style="float: left; margin-left: 0%; margin-right:3%; width: 47%">
+        {% for item in barcode_summary %}
+          <tr>
+            {% for i in item %} 
+            <td>{{ i|e }}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </table>
+
+      <div id="myDivScatter" style="float: left; margin-left: 3%; margin-right:0%; margin-top: 2%;width: 47%">
+        <script>
+          var trace1 = {
+            x: {{ barcode_plot.count_labels|safe }},
+            y: {{ barcode_plot.count_values|safe }},
+            type: 'scatter',
+            mode: 'markers',
+            marker: {
+              color: 'light blue'
+            }
+          };
+          var data = [trace1];
+
+          var layout = {
+            title: 'Read counts for each barcode',
+            font:{
+              family: 'Raleway, sans-serif'
+            },
+            showlegend: false,
+            xaxis: {
+              tickvals: []
+            },
+            yaxis: {
+              zeroline: false,
+              gridwidth: 2
+            },
+            width: 400, 
+            height: 400,
+            autosize:true,
+            margin: {
+                    l: 45,
+                    r: 35,
+                    b: 30,
+                    t: 30,
+                }
+          };
+          
+          var config = { 
+              "displayModeBar": true, 
+              "staticPlot": false, 
+              "showAxisDragHandles": false, 
+              "modeBarButtons": [["toImage", "resetScale2d"]], 
+              "scrollZoom": false,
+              "displaylogo": false, 
+          }
+
+          Plotly.newPlot('myDivScatter', data, layout, config);
+        </script>
+      </div>
+
+      <div class="clear" ></div>
+    </div>
+  </div>
