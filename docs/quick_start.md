@@ -37,7 +37,7 @@ Save scripts above as `${sample}.sh`.
 
 You can start your project by running:
 ```
-micormamba activate xrzs
+micromamba activate xrzs
 sample=project_name
 mkdir -p ${sample}
 cd ${sample}
@@ -75,7 +75,7 @@ Save scripts above as `${sample}.sh`.
 
 You can start your project by running:
 ```
-micormamba activate xrzs
+micromamba activate xrzs
 sample=project_name
 mkdir -p ${sample}
 cd ${sample}
