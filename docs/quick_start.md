@@ -5,17 +5,17 @@
 ### Plastech-seq
 
 ```
-micromamba activate xrzs
+sample=project_name
 
-drug plastech barcode --plate_tsv ./fastq_file.tsv -s sample -o results/
+drug plastech barcode --plate_tsv ./fastq_file.tsv -s ${sample} -o results/
 
-drug plastech trim --fq results/00.barcode/sample.fq -s sample -o results/
+drug plastech trim --fq results/00.barcode/${sample}.fq -s ${sample} -o results/
 
-drug plastech mapping --clean_fq results/01.trim/sample.clean.fq -s sample -o results/ --genomeDir ~/genome/mouse/
+drug plastech mapping --clean_fq results/01.trim/${sample}.clean.fq -s ${sample} -o results/ --genomeDir ~/genome/mouse/
 
-drug plastech featureCounts -s sample -o results/ --gtf ~/genome/mouse/Mus_musculus.GRCm39.104.chr.gtf --input_bam results/02.mapping/sample_Aligned.sortedByCoord.out.bam
+drug plastech featureCounts -s ${sample} -o results/ --gtf ~/genome/mouse/Mus_musculus.GRCm39.104.chr.gtf --input_bam results/02.mapping/${sample}_Aligned.sortedByCoord.out.bam
 
-drug plastech count --bam results/03.featureCounts/sample_name_sorted.bam --gtf ~/genome/mouse/Mus_musculus.GRCm39.104.chr.gtf -s sample -o results/
+drug plastech count --bam results/03.featureCounts/${sample}_name_sorted.bam --gtf ~/genome/mouse/Mus_musculus.GRCm39.104.chr.gtf -s ${sample} -o results/
 ```
 
 `--plate_tsv` Required. A record file, 3 columns, seperated by tab: \
@@ -23,17 +23,29 @@ drug plastech count --bam results/03.featureCounts/sample_name_sorted.bam --gtf 
 
 `--fq` Required. Fastq data.
 
+`-s` Required. Sample name or project name.
+
+`-o` Required. Output directory.
+
 `--clean_fq` Clean R2 fastq file. Required.
 
 `--genomeDir` Required. Genome directory.
 
 `--gtf` GTF path. Required.
 
-Save scripts above as `{sample}.sh`.
+Save scripts above as `${sample}.sh`.
 
-You can start your analysis by running:
+You can start your project by running:
 ```
-sh ./{sample}.sh
+micormamba activate xrzs
+sample=project_name
+mkdir -p ${sample}
+cd ${sample}
+```
+
+Then move the `${sample}.sh` file to `${sample}` directory and start analysis by running:
+```
+sh ./${sample}.sh
 ```
 
 ### PHD-seq
@@ -41,9 +53,11 @@ sh ./{sample}.sh
 ```
 micromamba activate xrzs
 
-drug phd preprocess --plate_tsv data/fastq_file.tsv -s test -o results/
+sample=project_name
 
-drug phd count --probe /data/Database/PHD-seq/Probes_sequence_files/006_probes.txt --fq results/00.preprocess/test -s test -o results/
+drug phd preprocess --plate_tsv data/fastq_file.tsv -s ${sample} -o results/
+
+drug phd count --probe /data/Database/PHD-seq/Probes_sequence_files/006_probes.txt --fq results/00.preprocess/${sample}.fq -s ${sample} -o results/
 ```
 
 `--plate_tsv` Required. A record file, 3 columns, seperated by tab: \
@@ -51,11 +65,25 @@ drug phd count --probe /data/Database/PHD-seq/Probes_sequence_files/006_probes.t
 
 `--probe` Required. Probe sequence file path, 2 columns, gene_name\tprobe_sequence.
 
-Save scripts above as `{sample}.sh`.
+`--fq` Required. Preprocess output fastq file path.
 
-You can start your analysis by running:
+`-s` Required. Sample name or project name.
+
+`-o` Required. Output directory.
+
+Save scripts above as `${sample}.sh`.
+
+You can start your project by running:
 ```
-sh ./{sample}.sh
+micormamba activate xrzs
+sample=project_name
+mkdir -p ${sample}
+cd ${sample}
+```
+
+Then move the `${sample}.sh` file to `${sample}` directory and start analysis by running:
+```
+sh ./${sample}.sh
 ```
 
 ## Note
