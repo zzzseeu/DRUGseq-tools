@@ -5,6 +5,7 @@ import hdf5plugin
 from scipy import sparse
 import numpy as np
 import os
+import glob
 from statsmodels.stats.multitest import multipletests
 from drug.toolkits import utils
 
@@ -261,9 +262,9 @@ def deseq2(counts: pd.DataFrame,
             'sig']='Down'   
     return result
     
-def gsea(genelist,
-         gene_sets,
-         organism):
+def gsea(genelist: list,
+         gene_sets: list or str,
+         organism: str) -> pd.DataFrame:
     import gseapy as gp
     enr = gp.enrichr(gene_list=genelist, # or "./tests/data/gene_list.txt",
                     gene_sets=gene_sets,
@@ -272,6 +273,101 @@ def gsea(genelist,
     result = enr.results
     
     return result
+
+def scenic(data_folder: str,
+           resource_forder: str,
+           species: str,
+           sample: str,
+           outdir: str
+           ) -> None:
+    import pickle
+    from dask.diagnostics import ProgressBar
+
+    from arboreto.utils import load_tf_names
+    from arboreto.algo import grnboost2
+
+    from ctxcore.rnkdb import FeatherRankingDatabase as RankingDatabase
+    from pyscenic.utils import modules_from_adjacencies, load_motifs
+    from pyscenic.prune import prune2df, df2regulons
+    from pyscenic.aucell import aucell
+
+    from pyscenic import binarization
+
+    import umap
+    
+    DATA_FOLDER=data_folder
+    RESOURCES_FOLDER=resource_forder
+    DATABASE_FOLDER = resource_forder
+
+    if species=='Human':
+        DATABASES_GLOB = os.path.join(DATABASE_FOLDER, "hg38_*_full_tx_v10_clust.genes_vs_motifs.rankings.feather")
+        MOTIF_ANNOTATIONS_FNAME = os.path.join(RESOURCES_FOLDER, "motifs-v10nr_clust-nr.hgnc-m0.001-o0.0.tbl")
+        HG_TFS_FNAME = os.path.join(RESOURCES_FOLDER, 'allTFs_hg38.txt')
+    elif species=='Mouse':
+        DATABASES_GLOB = os.path.join(DATABASE_FOLDER, "mm10_*_full_tx_v10_clust.genes_vs_motifs.rankings.feather")
+        MOTIF_ANNOTATIONS_FNAME = os.path.join(RESOURCES_FOLDER, "motifs-v10nr_clust-nr.mgi-m0.001-o0.0.tbl")
+        HG_TFS_FNAME = os.path.join(RESOURCES_FOLDER, 'allTFs_mm.txt')
+    SC_EXP_FNAME = os.path.join(DATA_FOLDER, f"{sample}.matrix.txt")
+    REGULONS_FNAME = os.path.join(outdir, f"{sample}.regulons.p")
+    MOTIFS_FNAME = os.path.join(outdir, f"{sample}.motifs.csv")
+
+    ex_matrix = pd.read_csv(SC_EXP_FNAME, sep='\t', header=0, index_col=0)
+
+    tf_names = load_tf_names(HG_TFS_FNAME)
+
+    db_fnames = glob.glob(DATABASES_GLOB)
+    def name(fname):
+        return os.path.splitext(os.path.basename(fname))[0]
+    dbs = [RankingDatabase(fname=fname, name=name(fname)) for fname in db_fnames]
+    dbs
+
+    adjacencies = grnboost2(ex_matrix, tf_names=tf_names, verbose=True)
+    modules = list(modules_from_adjacencies(adjacencies, ex_matrix))
+
+    # Calculate a list of enriched motifs and the corresponding target genes for all modules.
+    with ProgressBar():
+        df = prune2df(dbs, modules, MOTIF_ANNOTATIONS_FNAME)
+
+    # Create regulons from this table of enriched motifs.
+    regulons = df2regulons(df)
+
+    # Save the enriched motifs and the discovered regulons to disk.
+    df.to_csv(MOTIFS_FNAME)
+    with open(REGULONS_FNAME, "wb") as f:
+        pickle.dump(regulons, f)
+        
+    df = load_motifs(MOTIFS_FNAME)
+    with open(REGULONS_FNAME, "rb") as f:
+        regulons = pickle.load(f)
+        
+    with open(os.path.join(outdir, f'{sample}.tfs_genes.txt'), 'wt') as f:
+        f.write(f'TF\tgenes\n')
+        for i in regulons:
+            n = i.name
+            s = i.gene2weight
+            ss = sorted(s.items(), key = lambda kv:(kv[1], kv[0]), reverse=True)
+            f.write(f'{n}\t{ss}\n')
+            
+    auc_mtx = aucell(ex_matrix, regulons, num_workers=4)
+
+    auc_mtx.to_csv(os.path.join(outdir, f'{sample}.auc.tsv'),
+                sep='\t')
+    # time consuming
+    auc_binary = binarization.binarize(auc_mtx, num_workers=10)
+    # 结果返回一个tuple，包含两个元素：第一个是二值化后的表达矩阵；第二个是每个转录因子二值化的阈值
+    auc_binary[0].to_csv(os.path.join(outdir, f'{sample}.auc01.tsv'), 
+                        sep='\t')
+
+
+    # UMAP
+    runUmap = umap.UMAP(n_neighbors=10, 
+                        min_dist=0.4, 
+                        metric='correlation').fit_transform
+    dr_umap = runUmap(auc_mtx)
+    pd.DataFrame(dr_umap, 
+                columns=['X', 'Y'], 
+                index=auc_mtx.index).to_csv(os.path.join(outdir, f"{sample}.scenic_umap.txt"), 
+                                            sep='\t')
 
 def pywgcna():
     pass
@@ -389,10 +485,10 @@ def get_analysis_para(parser, optional=False):
                             default=1)
         parser.add_argument("--pCutoff", help="pvalue/qvalue threshold for DEGs", 
                             default=0.05)
-        parser.add_argument("--species", help="pvalue/qvalue threshold for DEGs", 
-                            default='Human')
-        parser.add_argument("--method", help="pvalue/qvalue threshold for DEGs", 
-                            default='DEseq2')
+        parser.add_argument("--species", help="Species name. Human or Mouse", 
+                            default='Human', choices=['Human', 'Mouse'])
+        parser.add_argument("--method", help="Analysis method for differential analysis.", 
+                            default='DEseq2', choices=['DEseq2', 'ttest', 'wilcox'])
         parser = utils.common_args(parser)
     
     return parser
