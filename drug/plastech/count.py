@@ -124,7 +124,7 @@ class COUNT():
                                                     sep='\t',
                                                     header=True,
                                                     index=False)
-            data.index = data.index.levels[0]
+            data.index = data.index.get_level_values('gene_name')
             data.T.to_csv(path_or_buf=f'{self.fileprefix}.matrix.txt',
                     sep='\t',
                     header =True,
