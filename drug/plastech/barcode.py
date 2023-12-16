@@ -172,10 +172,9 @@ class BARCODE:
                     # Must not be a homopolymer, e.g. AAAAAAAAAA
                     # Must not contain N
                     # Must not contain bases with base quality < 10
-                    if min(umi_qual)<10 or 'N' in umi or len(set(list(umi)))==1:
+                    if min(umi_qual)<10 or ('N' in umi) or len(set(list(umi)))==1:
                         umi_pass = False
                     if diff_idx==[] and umi_pass==True:
-                        
                         if bc_q30>=30:
                             s['barcode Q30'] += 1
                         if umi_q30>=30:

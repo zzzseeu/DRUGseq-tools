@@ -104,11 +104,11 @@ class COUNT():
         df_UMI = df.groupby(['Barcode', 'geneID'],
                             as_index=False).agg({'UMI': 'count'})
         data = df_UMI.pivot(values='UMI',
-                           columns='Barcode',
-                           index='geneID',).fillna(0).astype(int)
-        data.insert(0, 'gene_id', list(map(lambda x: x.strip().split('&')[0], data.index)))
-        data.insert(0, 'gene_name', list(map(lambda x: x.strip().split('&')[1], data.index)))
-        data.insert(0, 'gene_biotype', list(map(lambda x: x.strip().split('&')[2], data.index)))
+                            columns='Barcode',
+                            index='geneID',).fillna(0).astype(int)
+        data.insert(0, 'gene_id', list(map(lambda x: x.strip().split('&')[0], data.index.tolist())))
+        data.insert(0, 'gene_name', list(map(lambda x: x.strip().split('&')[1], data.index.tolist())))
+        data.insert(0, 'gene_biotype', list(map(lambda x: x.strip().split('&')[2], data.index.tolist())))
         
         data = data.set_index(['gene_name', 'gene_id', 'gene_biotype'])
         mtx = sparse.csr_matrix(data.values.T)

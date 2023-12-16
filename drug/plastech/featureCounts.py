@@ -40,6 +40,7 @@ class FEATURECOUNTS():
         # default parameters
         self.thread = args.thread
         self.gtf_type = args.gtf_type
+        self.featureCounts_para = args.featureCounts_para
 
         # out files
         self.out_prefix = f'{self.outdir}/0{__STEPS__.index(self.step)}.{self.step}'
@@ -95,6 +96,9 @@ class FEATURECOUNTS():
             f'-t {self.gtf_type} '
             f'{self.input_bam} '
         )
+        # cmd = " ".join(cmd)
+        if self.featureCounts_para is not None:
+            cmd += f"{self.featureCounts_para}"
         FEATURECOUNTS.run_featureCounts.logger.info(cmd)
         subprocess.check_call(cmd, shell=True)
     
@@ -166,5 +170,6 @@ def get_featureCounts_para(parser, optional=False):
         parser = utils.common_args(parser)
     parser.add_argument('--gtf', help='GTF path. Required.', required=True)
     parser.add_argument('--input_bam', help='BAM file path. Required.', required=True)
+    parser.add_argument('--featureCounts_para', help='other featurecounts parameters', default=None)
     
     return parser
