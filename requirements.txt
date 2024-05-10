@@ -9,6 +9,5 @@ scipy>=1.7.3
 setuptools==68.0.0
 pyscenic==0.12.1
 hdf5plugin==4.1.3
-omicverse==1.5.0
+omicverse==1.5.1
 torch==2.0.1
-
