@@ -29,6 +29,7 @@ class COUNT:
         self.fq = args.fq
         self.n_mismatch = int(args.n_mismatch)
         self.clean = args.clean
+        self.soft_clip = "" if args.soft_clip else "--no-softclip"
         
         self.count_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(int))) 
         self.unique_mapped_reads = 0 
@@ -71,8 +72,8 @@ class COUNT:
                f'-S {self.sam} '
                f'-p 15 '
                f'-5 {UMI_LEN} '
-               f'-3 68 --quiet --summary-file {self.fileprefix}.align_summary.txt '
-               f'--sensitive -k 1 --no-softclip ')
+               f'-3 68 --summary-file {self.fileprefix}.align_summary.txt '
+               f'--very-sensitive -k 1 {self.soft_clip} ')
         COUNT.mapping.logger.info(cmd)
         subprocess.check_call(cmd, shell=True)
         
@@ -231,6 +232,7 @@ def get_count_para(parser, optional=False):
                         required=True)
     parser.add_argument("--n_mismatch", help="The maximum allowed mismatch of bases. Default `4`.",
                         default=4)
+    parser.add_argument("--soft_clip", help="Whether perform soft-clipping", default=True)
     parser.add_argument("--clean", help="Remove intermediate files.",
                         action="store_true")
     
