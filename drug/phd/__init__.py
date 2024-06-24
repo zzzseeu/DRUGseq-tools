@@ -1,2 +1,2 @@
-__STEPS__ = ['preprocess', 'count', 'analysis']
+__STEPS__ = ['preprocess', 'count']
 __ASSAY__ = 'phd'

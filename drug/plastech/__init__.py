@@ -1,3 +1,3 @@
-__STEPS__ = ['barcode', 'trim', 'mapping', 'featureCounts', 'count', 'analysis']
+__STEPS__ = ['barcode', 'trim', 'mapping', 'featureCounts', 'count']
 __ASSAY__ = 'plastech'
 
