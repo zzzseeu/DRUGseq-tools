@@ -49,6 +49,7 @@ class BARCODE:
         self.n_mismatch = 1
         self.min_qual = int(args.min_qual)
         self.gzip = args.gzip
+        self.out_fq1 = args.out_fq1
         
         self.out_prefix = f'{self.outdir}/0{__STEPS__.index(self.step)}.{self.step}'
         
@@ -119,9 +120,14 @@ class BARCODE:
         check_dir(f'{self.out_prefix}')
         # store fastq file (gzip)
         if self.gzip:
-            out_fq = gzip.open(f'{self.out_prefix}/{self.sample}.fq.gz', "wt")
+            out_fq2 = gzip.open(f'{self.out_prefix}/{self.sample}_2.fq.gz', "wt")
+            if self.out_fq1:
+                out_fq1 = gzip.open(f'{self.out_prefix}/{self.sample}_1.fq.gz', "wt")
         else:
-            out_fq = open(f'{self.out_prefix}/{self.sample}.fq', "wt")
+            out_fq2 = open(f'{self.out_prefix}/{self.sample}_2.fq', "wt")
+            if self.out_fq1:
+                out_fq1 = open(f'{self.out_prefix}/{self.sample}_1.fq', "wt")
+
         # statement 
         # total reads
         # valid reads
@@ -194,9 +200,11 @@ class BARCODE:
                     # write valid reads
                     new_head = f'@{barcode2tag[barcode_dict[barcode]]}_{umi}_{tmp}'
                     new_seq = f'{new_head}\n{entry2.sequence}\n+\n{entry2.quality}\n'  
-                    out_fq.write(f'{new_seq}')      
+                    out_fq2.write(f'{new_seq}')
+                    if self.out_fq1:
+                        out_fq1.write(f'{new_head}\n{f1_seq[int(umi_range[1]):]}\n+\n{f1_qual[int(umi_range[1]):]}\n')
         
-        out_fq.close()
+        out_fq2.close()
         
         reads_counter = sorted(reads_counter.items(), key = lambda i: -i[1])
                 
@@ -245,6 +253,8 @@ def get_barcode_para(parser, optional=False):
                             action="store_true")
         parser.add_argument("--min_qual", help="Min quality for barcode base pair. Default `10`.", 
                             default=10)
+        parser.add_argument("--out_fq1", help="Output R1 fastq file without barcode and UMI.", 
+                            action="store_true")
         parser = common_args(parser)
     
     return parser
